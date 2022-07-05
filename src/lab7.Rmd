@@ -1,0 +1,73 @@
+---
+title: "lab7"
+author: "Patryk Tokarski"
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(dev='CairoPNG')
+```
+
+### Stwórzcie wykres funkcji gęstości dla zmiennej cena w każdej z grup szlifu diamentów (zbiór danych diamonds). Wykres ma być poniższej postaci.
+```{r}
+library(ggplot2)
+ggplot(diamonds, aes(price, color = cut))+
+  geom_density()+
+  labs(title = "Funkcje gestosci zmiennej cena w podziale na szlif",
+       x = 'cena',
+       y = 'gestosc',
+       color = 'szlif')
+```
+
+### Ze zbioru danych gapminder (pakiet o tej samej nazwie) wybierzcie obserwacje które dotyczą 2002 roku oraz stwórzcie wykres poniższej postaci. Kolor którym wypełnione są wykresy ramka wąsy to jasnoniebieski, ramki są koloru czerwonego.
+```{r}
+library(gapminder)
+data <- gapminder[gapminder$year == 2002, ]
+
+ggplot(data, aes(x = gdpPercap, y = continent))+
+  geom_boxplot(col = "red", fill = "lightblue")+
+  labs(x = "PKB per capita", y = "Kontynent")
+```
+
+### Stwórzcie wykres zależności między transformacją logarytmiczną zmiennej oznaczającej wagę zwierzęcia, a transformacją logarytmiczną zmiennej oznaczającej masę mózgu. Pokoloruj punkty na wykresie za pomocą zmiennej oznaczającej liczbę godzin snu
+```{r}
+ggplot(msleep, aes(x = bodywt, y = brainwt, color = sleep_total))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  labs(x = "Masa ciała (skala logarytmiczna)", 
+       y = "Masa mózgu (skala logarytmiczna)",
+       color = "Liczba godzin snu")
+
+  
+```
+
+### Narysujcie wykres liniowy, na którym będą też wyrysowane punkty. Zależności pomiędzy liczbą nieprzespanych przez zwierzę godzin (awake), a liczbą jego godzin snu w fazie REM(sleep_rem), linie mają być narysowane dla różnych rodzajów odżywania zwierzęcia. (zbiór danych msleep)
+```{r}
+ggplot(msleep, aes(x = sleep_rem, y = awake, colour = vore))+
+  geom_point()+
+  geom_line()
+```
+
+### Na podstawie zbioru danych movies z pakietu ggplot2movies stwórzcie wykres, na którym przedstawione będą tylko filmy sklasyfikowane jako PG oraz PG-13 z lat od 2000 do 2005. Ma być to wykres ramka wąsy, jak ten przedstawiony poniżej.
+```{r}
+library(ggplot2movies)
+data <- movies[movies$mpaa %in% c("PG", "PG-13") & 
+                 movies$year >=2000 & movies$year <= 2005, ]
+ggplot(data, aes(x = mpaa, y = budget, colour = factor(year)))+
+  geom_boxplot()+
+  labs(x = 'Klasyfikacja', y='Budzet', colour = 'Rok')
+```
+
+### Narysuj siatkę wykresów, którą tworzymy za pomocą zmiennej year i drv
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy))+
+  geom_point()+
+  facet_grid(year ~ drv)
+```
+

@@ -1,0 +1,68 @@
+---
+title: "lab5"
+author: "Patryk Tokarski"
+date: '2022-03-29'
+output:
+  html_document: default
+  pdf_document: default
+---
+### Ze zbioru flights w pakiecie nycflights13 wybierzcie loty, które były opóźnione co najmniej godzinę, ale nadrobiły więcej niż pół godziny w locie.
+```{r message=FALSE}
+library("nycflights13")
+library("dplyr")
+dane <-  flights
+
+loty1 <-  dane[dane$dep_delay > 60 & dane$dep_delay - dane$arr_delay > 30, ]
+
+# odfiltrowanie lotów z brakiem danych
+loty1 <- loty1[is.na(loty1$dep_delay) == F, ]
+
+loty1[c("tailnum", "dep_delay", "arr_delay")]
+
+```
+### Ze zbioru flights w pakiecie nycflights13 wybierzcie loty, w których przewoźnikiem było United (UA),American (AA) lub Delta (DL).
+```{r}
+loty2 <- dane[dane$carrier %in% c("UA", "AA", "DL"), ]
+loty2[c("tailnum", "carrier")]
+```
+### Ze zbioru flights w pakiecie nycflights13 wybierzcie loty, które wystartowały pomiędzy północą, a 6 rano.
+```{r}
+HHMM_to_mins <- function(x) {
+  (x%%100 + x%/%100*60)%%1440
+}
+
+polnoc <- HHMM_to_mins(0000)
+szosta_rano <- HHMM_to_mins(0600)
+
+loty3 <- dane[between(dane$dep_time, polnoc, szosta_rano), ]
+
+# odfiltrowanie lotów z brakiem danych
+loty3 <- loty3[is.na(loty3$dep_delay) == F, ]
+
+loty3[c("tailnum", "dep_time")]
+```
+### Zasymulujcie rozkład ceny akcji w czasie, jej cena na rozpoczęcie wyniosła 100, a codzienne skoki procentowe cen można opisać rozkładem normalnym o średniej 0 i odchyleniu standardowym 0.01.Jądro generatora ustawcie na 22. Ceny akcji zapisujcie w wektorze dopóki nie przekroczą kwoty 150 lub spadną poniżej 50. Narysujcie wykres liniowy cen akcji w czasie. Przykładowy wykres znajduje się poniżej.
+```{r}
+set.seed(22)
+
+symulator_cen <- function() {
+  wektor <- c(100)
+  
+  while ( all(between(wektor, 50, 150)) ) {
+    skok_procentowy <- 1+rnorm(1, mean = 0, sd = 0.01)
+    ostatni_indeks <- length(wektor)
+    
+    nastepna_wartosc <- wektor[ostatni_indeks] * skok_procentowy
+    wektor <- c(wektor, nastepna_wartosc)
+  }
+  return(wektor)
+}
+
+ceny_akcji <- symulator_cen()
+plot(ceny_akcji, type = "l",
+     xlab = "dzien", ylab = "cena",
+     main = "Ceny akcji")
+
+```
+
+

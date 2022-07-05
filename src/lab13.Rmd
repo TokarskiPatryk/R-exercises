@@ -1,0 +1,183 @@
+---
+title: "lab13"
+author: "Patryk Tokarski"
+date: '2022-06-11'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(dev='CairoPNG')
+```
+1. Rozpatrzmy zbiory danych znajdujące się w plikach pod nazwami movies.csv i ratings.csv i zaimportujmy je
+do R
+Wczytajcie te zbiory danych do środowiska R jako ramki movies i ratings. Następnie połączcie te ramki w
+jedną movie_ratings względem zmiennej movieId
+- Stwórzcie nową zmienną well_rated typu logicznego która przypisze wartość TRUE gdy mediana ocen
+użytkowników była większa lub równa 4.
+- Stwórzcie nową zmienną year (typ całkowitoliczbowy) oraz title_no_year które zostaną utworzone
+na podstawie zmiennej title.
+- Stwórzcie nową zmienną number_of_genres która pokaże liczbę gatunków przypisanych do każdego
+filmu.
+- Stwórzcie nową zmienną typu logicznego xx_century, która pokaże wartość TRUE jeśli film jest z XX
+wieku i FALSE w pozostałych wypadkach.
+- Stwórzcie nową zmienną typu logicznego homogenous która pokaże wartość TRUE wyłącznie w wypadku
+gdy film będzie miał przypisany dokładnie jeden gatunek.
+W przypadku wystąpienia wartości NA w dowolnej z nowych kolumn, omiń takie wiersze.
+```{r}
+movies <- read.csv("data/movies.csv")
+ratings <- read.csv("data/ratings.csv")
+
+movie_ratings <- merge(movies, ratings, by = "movieId")
+head(movie_ratings)
+
+```
+```{r}
+library(tidyverse)
+movie_ratings <- movie_ratings %>% 
+  group_by(title) %>% 
+  mutate(well_rated=if_else(median(rating)>=4, T, F),
+         title_no_year=str_extract_all(title, ".+(?= \\()"),
+         year = str_extract_all(title, "(?<=\\()[0-9]{4}"),
+         number_of_genres=str_count(genres,"[:alpha:]+"),
+         xx_century=if_else(between(year, 1901,2000), T, F),
+         homogenous=if_else(number_of_genres==1, T, F)
+         )
+movie_ratings <- na.omit(movie_ratings)
+
+```
+- Który film miał najwyższe średnie oceny, spośród tych które były oceniane co najmniej 30 razy? Jaka była ta średnia ocen?
+```{r}
+head(movie_ratings, n = 100) %>% 
+  count(title)
+
+test <- movie_ratings %>%
+  mutate(nr_of_voices = n())
+
+test %>% 
+  filter(nr_of_voices>=30) %>% 
+  mutate(avg = mean(rating)) %>%
+  ungroup() %>% 
+  arrange(desc(avg)) %>% 
+  distinct(title, avg) %>% 
+  head(1)
+```
+- Który z gatunków filmów był oceniany najlepiej? (w tym celu zakładamy, że np. Comedy i Com-
+edy|Romance to inne gatunki)
+```{r}
+movie_ratings2 <- merge(movies, ratings, by = "movieId")
+movie_ratings2 <- movie_ratings2 %>% 
+  nest(data=c(userId:timestamp))
+
+movie_ratings2 <- movie_ratings2 %>% 
+  rowwise() %>% 
+  mutate(avg_rating = mean(data$rating))
+
+movie_ratings2 %>% 
+  group_by(genres) %>% 
+  summarise(mean = mean(avg_rating)) %>% 
+  arrange(desc(mean)) %>% 
+  head()
+
+
+```
+
+- Który film z gatunku Comedy|Romance został oceniony przynajmniej 75 razy i miał najniższe oceny?
+Który z nich miał najwyższe? Jakie to były oceny?
+```{r}
+movie_ratings2 %>% 
+  filter(genres=="Comedy|Romance") %>% 
+  filter(length(data$userId)>=75) %>%
+  ungroup() %>% 
+  filter(avg_rating==min(avg_rating))
+```
+
+2. Używając zbioru danych babynames z biblioteki o tej samej nazwie rozwiążcie poniższe problemy:
+- Jakie było 5 najczęściej nadawanych imion chłopcom w 2017 roku oraz jaki procent wszystkich imion
+one stanowiły (procent w formacie np. 10.23)?
+```{r}
+library(babynames)
+df <- babynames
+df %>% 
+  filter(year==2017) %>% 
+  slice_max(n, n=5) %>% 
+  mutate(procent = format(prop*100, digits=2)) %>% 
+  select(name, procent)
+```
+
+- Stwórz dwa wykresy kolumnowe 5 najczęściej nadawanych imion w 2017, jeden dla dziewczyn i drugi dla
+chłopców. Zmienną x mają być imiona, zaś y procent.
+
+```{r}
+girls <- df %>% 
+  filter(year==2017) %>% 
+  filter(sex=="F") %>% 
+  slice_max(n, n=5)
+
+boys <- df %>% 
+  filter(year==2017) %>% 
+  filter(sex=="M") %>% 
+  slice_max(n, n=5)
+
+girls %>% 
+  ggplot(aes(x=prop, y=fct_reorder(name, prop), fill=name))+
+  geom_col(show.legend = F)+
+  labs(y="Name", x="Percent of all babies",
+       title="Top 5 girls names in 2017")
+
+boys %>% 
+  ggplot(aes(x=prop, y=fct_reorder(name, prop), fill=name))+
+  geom_col(show.legend = F)+
+  labs(y="Name", x="Percent of all babies",
+       title="Top 5 boys names in 2017")
+```
+- Znajdź dzieci nazwane imieniem Ryan i policz jak wiele dzieci od 1880 roku zostało nazwanych tym imieniem z każdej z płci. Jaki procent wszystkich Ryanów stanowią dzieci danej płci
+```{r}
+df %>% 
+  filter(year>=1880,name=="Ryan") %>% 
+  group_by(sex) %>% 
+  summarise(sum(n))
+
+sum_of_ryans <- df %>% 
+  filter(year>=1880,name=="Ryan") %>% 
+  count(sum(n))
+sum_of_ryans <- sum_of_ryans$`sum(n)`
+
+df %>% 
+  filter(year>=1880,name=="Ryan") %>% 
+  group_by(sex) %>% 
+  summarise(percent = sum(n)/sum_of_ryans*100)
+```
+
+- Stwórz wykres liniowy liczby nadań imiona Ryan dzieciom w czasie, pokolorowany względem płci dzieci.
+```{r}
+ryan <- df %>% 
+  filter(name=="Ryan")
+ryan %>% ggplot(aes(x=year,y=n,group=sex, color=sex))+
+  geom_line()
+
+```
+
+- Znajdź najczęściej nadawane imię dziecięcie wśród chłopców w każdym z lat 1980-2017.
+```{r}
+df %>% 
+  filter(sex=="M") %>% 
+  group_by(year) %>% 
+  slice_max(n) %>% 
+  select(year, name)
+```
+
+- Stwórzcie wykres porównujący liczbę dzieci, którym nadano imię Bryan do liczby dzieci imieniem Brian
+w czasie.
+```{r}
+df <- df %>% 
+  filter(name=="Bryan") %>% 
+  ungroup() %>% 
+  mutate(prop_to_all_bryans=n/sum(n))
+
+df %>%  ggplot(aes(x=year, y=prop_to_all_bryans, color=sex))+
+  geom_line()
+```
+

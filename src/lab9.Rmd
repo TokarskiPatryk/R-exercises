@@ -1,0 +1,139 @@
+---
+title: "lab9"
+author: "Patryk Tokarski"
+date: '2022-05-09'
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(dev='CairoPNG')
+```
+
+
+```{r}
+data <- read.csv('data/gapminder-FiveYearData.csv')
+library(tidyverse)
+summary(data)
+```
+
+### Przefiltrujcie dane, tak aby pozostały wyłącznie dane dotyczące obu Ameryk w 2007. Wyświetlone mają zostać tylko zmienne dotyczące kraju oraz przewidywanej długości życia
+```{r}
+data %>% 
+  filter(continent == 'Americas') %>% 
+  head()
+```
+
+### Do ramki danych gapminder dodaj zmienną gdp zdefiniowaną jako iloczyn wielkości populacji oraz PKB na osobę (gdp per person).
+```{r}
+data %>% 
+  mutate(gdp = pop * gdpPercap) %>% 
+  head()
+```
+
+### Zidentyfikuj obserwację (kraj oraz rok w którym się to wydarzyło) o najniższym PKB na osobę.
+```{r}
+data %>% 
+  filter(gdpPercap == min(gdpPercap)) %>% 
+  select(country, year)
+```
+
+### Zidentyfikuj obserwacje z przeciętną długością życia powyżej średniej dla każdego z kontynentów. Rozgrupuj dane
+```{r}
+data4 <- data %>% 
+  group_by(continent) %>% 
+  filter(lifeExp > mean(lifeExp)) %>% 
+  ungroup()
+```
+```{r}
+data %>% group_by(continent) %>% summarise(mean(lifeExp))
+```
+
+### Policz liczbę obserwacji znalezionych w poprzednim przykładzie dla każdego z kontynentów.
+```{r}
+data4 %>%
+  group_by(continent) %>% 
+  summarise(n())
+```
+
+### Oblicz średnią ze średnich długości życia (grand_mean) oraz sumaryczne PKB (total_gdp) ze wszystkich obserwacji.
+```{r}
+data %>% 
+  summarise(grand_mean = mean(lifeExp), total_gdp=sum(gdpPercap*pop))
+```
+
+### Stwórz te same statystyki w każdym z wymienionych w tabeli lat.
+```{r}
+data %>% 
+  group_by(year) %>% 
+  summarise(grand_mean = mean(lifeExp), total_gdp=sum(gdpPercap*pop))
+```
+
+### Stwórz wykres rozrzutu pokazujący zależność pomiędzy PKB na osobę (oś x), a oczekiwaną długością życia (oś y) w 2007 roku.
+```{r}
+data8 <-data %>% 
+  filter(year == 2007)
+  
+plot8 <- ggplot(data8, aes(x = gdpPercap, y = lifeExp))+
+  geom_point()
+
+plot8
+```
+
+### Na poprzednim wykresie dodaj linię regresji rysowaną metodą loess bez wyrysowanego przedziału ufności.
+```{r}
+plot8+
+  geom_smooth(se = F, method = loess)
+```
+
+### Na wykresie z przykładu 8 dodaj linię regresji liniowej bez wyrysowanego przedziału ufności.
+```{r}
+plot8+
+  geom_smooth(se = F, method = lm)
+```
+
+### Stwórzcie wykres rozrzutu pokazujący rok na osi x oraz oczekiwaną średnią długością życia w danym roku na osi y. Punkty połącz linią
+```{r}
+data11 <- data %>% 
+  group_by(year) %>% 
+  mutate(grand_mean = mean(lifeExp)) %>% 
+  ungroup()
+
+ggplot(data11, aes(x = year, y = grand_mean))+
+  geom_point()+
+  geom_line()
+```
+
+
+### Zmodyfikuj poprzedni wykres tak, aby pokazane zostały linie dla każdego z kontynentów (inny kolor dla każdego kontynentu + legenda)
+```{r}
+data12 <- data %>% 
+  group_by(year,continent) %>% 
+  mutate(grand_mean = mean(lifeExp))
+
+ggplot(data12)+
+  geom_line(aes(x = year,y=grand_mean, color=continent))
+```
+
+### Modyfikuj wykres z zadania 8, tak aby kolory punktów odpowiadały kontynentom (+legenda)
+```{r}
+plot13 <- plot8+
+  geom_point(aes(color = continent,),)
+
+plot13
+```
+
+### Modyfikuj poprzedni wykres tak, aby wielkość punktów odpowiadała wielkości populacji (pop).
+```{r}
+plot13+
+  geom_point(aes(color = continent, size = pop))
+```
+
+
+
+

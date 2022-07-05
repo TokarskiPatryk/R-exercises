@@ -1,0 +1,139 @@
+---
+title: "lab10"
+author: "Patryk Tokarski"
+date: '2022-05-17'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+library(tidyverse)
+```
+### Stwórzcie wyrażenia regularne które znajdą słowa (w zbiorze words):
+
+1. Słowa rozpoczynające się od samogłosek
+```{r}
+str_subset(words, "^[aeiouyAEIOUY]")
+```
+2. Słowa zawierające tylko spółgłoski
+```{r}
+str_subset(words, "^[^aeiouyAEIOUY]*$")
+```
+
+3. Kończące się na "ed", ale nie na "eed"
+```{r}
+str_subset(words, "^[^e]*ed$")
+```
+4. Kończące się na "ing" lub "ise"
+```{r}
+str_subset(words, "ing$|ise$")
+```
+
+5. Mające co najmniej 10 liter
+
+```{r}
+str_subset(words, "[A-z]{10,}")
+```
+
+6. Mające dokładnie 10 liter
+```{r}
+str_subset(words, "^[A-z]{10}$")
+```
+
+7. Odpowiadające trzem wymienionym układom podawania numerów telefonów komórkowych w Polsce
+
+    a) 123456789
+
+    b) 123-456-789
+
+    c) (+48) 123-456-789
+
+```{r}
+nr_tel_prawidlowe <- c(
+    "123456789",
+    "123-456-789",
+    "(+48) 123-456-789"
+)
+    
+nr_tel_NIEprawidlowe <- c(
+    "1234567891",
+    "123-456--789",
+    "123-4256-789",
+    "(+48)123-456-789",
+    "ab3456789",
+    "123_456_789",
+    "123 425 789",
+    "+48  123-456-789"
+)
+nr_tel <- c(nr_tel_prawidlowe, nr_tel_NIEprawidlowe)
+```
+
+a)
+```{r}
+str_subset(nr_tel, "^\\d{9}$")
+```
+b)
+```{r}
+str_subset(nr_tel, "^\\d{3}\\-\\d{3}\\-\\d{3}$")
+```
+c)
+```{r}
+str_subset(nr_tel, "^\\(\\+48\\)\\s\\d{3}\\-\\d{3}\\-\\d{3}$")
+```
+
+8. Słowa zaczynające się od 3 spółgłosek
+```{r}
+str_subset(words, "^[^aeiouyAEIOUY]{3,}")
+```
+9. Słowa, w których występują 3 lub więcej samogłosek z rzędu.
+```{r}
+str_subset(words, "[aeiouyAEIOUY]{3,}")
+```
+10. Słowa w których występują co najmniej dwie pary samogłoska-spółgłoska obok siebie.
+```{r}
+str_subset(words, "([aeiouyAEIOUY][^aeiouyAEIOUY]){2,}")
+```
+
+11. Z napisu “Wrocław: 23.5, Bydgoszcz: 17.5, Gorzów Wielkopolski: 12, Zielona Góra 16.2” wytnijcie nazwy miast
+```{r}
+napis <- "Wrocław: 23.5, Bydgoszcz: 17.5, Gorzów Wielkopolski: 12, Zielona Góra 16.2"
+
+str_extract_all(napis, 
+                "[A-ZŁŻŹĆ][A-złóęńążźćŁŻŹĆ ]+[a-złóęńążźć]")
+```
+12. W poprzednim napisie zamieńcie kropki na przecinki (separatory dziesiętne), a przecinki na średniki.
+
+```{r}
+napis %>% 
+  str_replace_all(",", ";") %>% 
+  str_replace_all("\\.", ",")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,105 @@
+---
+title: "lab11"
+author: "Patryk Tokarski"
+date: '2022-05-25'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+1. Dopasuj imiona z tytułami lub bez zgodnie z pokazanym wzorem.
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+name = c("Mr. Jon",
+         "Mrs. Jon",
+         "Mr Ron",
+         "Ms. Reene",
+         "Ms Julie",
+         "Ron", 
+         "Rev. Johnsons")
+str_extract_all(name, "^((Mr|Mrs|Ms)\\.* )?[:alpha:]+$")
+```
+2. Ze zbioru danych College w paczce ISLR stwórzcie wektor nazw szkół wyższych (college.names)
+```{r}
+library(ISLR2)
+nazwy_szkol <- rownames(College)
+texas.college <- str_subset(nazwy_szkol, "Texas")
+Texas <- College[texas.college,]
+head(Texas)
+```
+3. W zbiorze sentences znajdują się zdania. Stwórz wektor słów poprzedzonych przedimkami (a/an/the) również z wielkiej litery. Ma to być wektor złożony z elementów np. a sun, the storm.
+```{r}
+slowa <- str_extract_all(sentences, "(a|an|the|A|An|The) [:alpha:]+") %>% as_vector()
+head(slowa)
+
+str_replace_all(slowa, "^[:alpha:]+", toupper) %>% head()
+```
+
+4. Stwórzcie wektor ze słów w których pierwsze słowo jest dowolne, następne zaczyna się na f, a po nim następuje jeszcze jedno (zbiór sentences). 
+```{r}
+str_extract_all(sentences, "[A-z]+ f[a-z]+ [A-z]+") %>% as_vector() %>% head()
+```
+
+5. Napis zamieńcie tak (korzystając z wyrażeń regularnych), aby napis umieszczony w nawiasie znikł wraz z nim (i spacją przed nim).
+```{r}
+napis <- 'Gabriel-Henry.Tedd.-John (Yorkshire)'
+str_remove(napis, " \\([:alpha:]+\\)")
+```
+```{r}
+str_replace_all(napis, "\\([:alpha:]+\\)", "\\(\\)")
+```
+```{r}
+str_replace_all(napis, "\\(|\\)", "")
+```
+
+6. W wektorze przechowywane są imiona i nazwiska osób.
+```{r}
+raw.data <- paste("555-1239Moe Szyslak(636) 555-0113Burns, C.",
+                  "Montgomery555 -6542Rev. Timothy Lovejoy555 8904Ned ",
+                  "Flanders636-555-3226Simpson, Homer5553642Dr. Julius Hibbert")
+```
+
+Stwórzcie wektor z imionami i nazwiskami tych osób 
+```{r}
+imiona <- str_extract_all(raw.data, "[A-z,. ]+") %>% 
+  as_vector() %>% 
+  str_subset("^ $", negate = T)
+imiona
+```
+
+- “C.” w imieniu zastąpcie przez napis Charles
+```{r}
+imiona <- str_replace_all(imiona, "C.", "Charles")
+imiona
+```
+
+- Następnie stwórzcie ramkę danych z pierwszym imieniem (w pierwszej kolumnie) i nazwiskiem w drugiej tych osób bez dodatkowych tytułów.
+```{r}
+imiona_bez_tytulow <- str_remove_all(imiona,"^[:alpha:]+\\. ")
+
+nazwisko_imie <- str_subset(imiona_bez_tytulow, ",") %>% 
+                  str_extract_all("[A-z]+", simplify = T)
+
+imie_nazwisko <- str_subset(imiona_bez_tytulow, ",", negate = T) %>% 
+                  str_extract_all("[A-z]+", simplify = T)
+
+data.frame(First_name = c(nazwisko_imie[,2],
+                                imie_nazwisko[,1]),
+                 Last_name = c(nazwisko_imie[,1],
+                               imie_nazwisko[,2]))
+
+```
+
+- Stwórzcie wyrażenie regularne które poda wektor logiczny sprawdzający czy osoba z listy posiada tytuł (doktora, wielebnego lub inny).
+```{r}
+str_detect(imiona,"[:alpha:]+\\.")
+```
+
+- Stwórzcie wektor logiczny za pomocą wyrażeń regularnych i innych funkcji, sprawdzający czy osoba posiada drugie imię.
+```{r}
+str_detect(imiona, "\\w+[, ]+\\w+ \\w+")
+```
+

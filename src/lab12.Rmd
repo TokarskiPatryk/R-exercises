@@ -1,0 +1,214 @@
+---
+title: "lab12"
+author: "Patryk Tokarski"
+date: '2022-05-30'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+library(tidyverse)
+```
+
+1. W statystycznej kontroli jakości, gdy obserwacje sterowanego procesu zbierane są w równych odstępach czasu,
+tzw. składnik losowy zmienności szacuje się często za pomocą współczynnika
+\[\overline{s^2_x} = \frac{1}{2(n-1)}\sum^{n-1}_{i=1}(x_{i+1}-x_i)^2\]
+gdzie $x_i$ jest obserwacją pobraną w chwili $i, i=1,2,...,n$. Stwórz funkcję, która dla danego wektora
+liczbowego x wyznaczy wartość $\overline{s}^2_x$.
+
+```{r}
+s_x <- function(x) {
+  n <- length(x)
+  s <- c()
+  for(i in x[1:n-1]) {
+    s[i] <- (x[i+1] - x[i])^2
+  }
+  wartosc <- sqrt(1/(2*(n-1))*sum(s))
+  return(wartosc)
+}
+
+s_x(c(1,2,3))
+```
+
+2. Mamy dane 2 wektory liczbowe x i y tej samej długości równej n. Wypisz na ekran wartość współczynnika
+korelacji r Pearsona, będącego miarą tzw. liniowej zależności między poszczególnymi parami obserwacji
+$(x_i, y_i)$, dla $i = 1, ..., n$.
+\[ r(x,y) = \frac{1}{n-1}\sum_{i=1}^n\frac{x_i-\overline{x}}{s_x}\frac{y_i-\overline{y}}{s_y} \]
+gdzie $x_i$ jest i-tym elementem wektora x,$\overline{x}$ i $\overline{y}$ średnią arytmetyczną, zaś $s_x, s_y$ - odchylenie standardowe, odpowiednio wektora x i y. Warto zauważyć, że $r(x, y) \in [−1, 1]$.
+
+```{r}
+rPearson <- function(x,y) {
+  n <- length(x)
+  meanx <- mean(x)
+  meany <- mean(y)
+  sd_x <- sd(x)
+  sd_y <- sd(y)
+  s <- c()
+  
+  for(i in 1:n) {
+    s[i] <- (x[i]-meanx)*(y[i]-meany)/(sd_x*sd_y)
+  }
+  
+  wynik <- 1/(n-1)*sum(s)
+  return(wynik)
+}
+```
+Testing:
+```{r}
+set.seed(2020)
+x <- rnorm(20,0,1)
+y <- 10*x+2
+rPearson(x,y)
+```
+
+```{r}
+set.seed(2020)
+x <- rnorm(20,0,1)
+y <- -4*x+1
+rPearson(x,y)
+```
+
+```{r}
+set.seed(2020)
+x <- rnorm(2000, 0, 1)
+y <- rnorm(2000, 5, 2)
+rPearson(x,y)
+
+```
+
+3. Napisz funkcję służącą do wyznaczania iloczynu elementów leżących na przekątnej danej macierzy kwadratowej.
+Jeśli macierz wejściowa nie jest kwadratowa, zwracana jest wartość NULL
+
+```{r}
+x <- matrix(c(4,15,2,8),nrow = 2, byrow = T)
+
+iloczyn_el_mac <- function(x) {
+  if(dim(x)[1] != dim(x)[2]) return(NULL)
+  prod(diag(x))
+}
+iloczyn_el_mac(x)
+```
+
+4. Wbudowana przykładowa ramka danych ToothGrowth (wpisz po prostu jej identyfikator, aby ją wyświetlić)
+zawiera wyniki badań przeprowadzonych na świnkach morskich. Mierzono długość zębów w grupach gryzoni
+przyjmujących różne dawki witaminy C [mg] w jednej z dwóch postaci: soku pomarańczowego (OJ) i bezpośrednio, czyli kwasu askorbinowego (VC). Przekształć zmienną dose (dawka witaminy C) na typ czynnikowy (factor). Wyznacz średnią długość zębów:
+
+```{r}
+df <- ToothGrowth
+
+df$dose <- factor(ToothGrowth$dose)
+```
+
+a) dla kazdej dawki 
+
+```{r}
+df %>% 
+  group_by(dose) %>% 
+  summarise(mean(len))
+```
+
+b) postaci preparatu witaminowego 
+
+```{r}
+df %>% 
+  group_by(supp) %>% 
+  summarise(mean(len))
+```
+
+c) dawki i postaci preparatu razem.
+
+```{r}
+df %>% 
+  group_by(dose, supp) %>% 
+  summarise(mean(len))
+```
+
+5. Dungeons and Dragons to gra fantasy, w której gracze rzucają wielościennymi kośćmi (nie tylko klasyczną
+6-ścienną). Przykładowo czasami gracz musi rzucić 3 razy 20-ścienną kością, wtedy w skrócie piszemy, że
+rzuca “3d20”. Napisz funkcję, która wylosuje mdn (dla liczb całkowitych m i n).
+
+```{r}
+mdn <- function(x,y) {
+  sample(c(1:y), size = x)
+}
+mdn(3,20)
+```
+6. Znajdź wszystkie liczby pierwsze mniejsze od 1000. (Sito Eratostenesa)
+```{r}
+liczby_pierwsze_do_danego_n <- function(n) {
+  prime <- rep(T, n)
+  prime[1] <- F
+
+  for(i in 2:sqrt(n)){
+    if(prime[i]) prime[seq(i^2, n, i)] <- F
+  }
+  which(prime)
+}
+liczby_pierwsze_do_danego_n(1000)
+
+```
+
+7. Wyobraźcie sobie liceum, w którym jest 1000 szafek ustawionych w rzędzie, są one ponumerowane liczbami
+od 1 do 1000. Na początku wszystkie 1000 szafek jest zamkniętych. 1000 uczniów zostaje wysłanych do tych
+szafek, gdy uczeń podejdzie do szafki zmienia jej stan (otwiera gdy jest zamknięta lub zamyka jeśli była
+otwarta). Pierwszy uczeń podchodzi do wszystkich szafek, drugi podchodzi do szafek numer: 2, 4, 6, 8, . . ..
+Trzeci podchodzi do szafek numer 3, 6, 9, 12, . . .. Proces zakończy się gdy już wszyscy uczniowie podeszli do
+odpowiednich szafek.
+Za pomocą odpowiednich instrukcji w R zdeterminuj które szafki są otwarte po zakończeniu tego procesu.
+
+```{r}
+n <- 1000
+szafki <- rep(F, n)
+for(i in 1:n) {
+  szafki[seq(i, n, i)] <- !szafki[seq(i, n, i)]
+}
+which(szafki)
+
+```
+
+8. Napisz i przetestuj funkcję obliczającą sumę wskazanej liczby wyrazów (N) poniższego szeregu, (zapro-
+ponowana przez Leibnitza metoda obliczania liczby $\pi$).
+\[ 4\sum^N_{n=0}\frac{(-1)^n}{2n+1} \]
+funkcja ma również obliczać różnicę między liczbą $\pi$ (w wartości bezwzględnej), a jej przybliżeniem uzyskanym
+z powyższego wzoru. Wynikiem działania funkcji ma być komunikat:
+“Przybliżenie Leibnitza: ....
+Różnica między wartością prawdziwą, a przybliżeniem: ....”
+```{r}
+przyblizenie_leibnitza <- function(N) {
+  wynik <- 0
+  for (i in 0:N) {
+    wynik <- wynik + (-1)^i/(2*i+1)
+  }
+  wynik <- wynik*4
+  cat("Przybliżenie Leibnitza:",wynik,"\n")
+  cat("Różnica między wartością prawdziwą, a przybliżeniem:",
+      abs(pi-wynik))
+}
+przyblizenie_leibnitza(100)
+```
+
+9. Napisz funkcję, która mnoży podany wektor dwuelementowy przez macierz obrotu
+\begin{bmatrix}
+ cos(\alpha)& sin(\alpha) \\
+ -sin(\alpha)& cos(\alpha) \\
+\end{bmatrix}
+
+gdzie $\alpha$ jest parametrem tej funkcji. Funkcja ma zwrócić macierz która jest wynikiem tej operacji.
+
+```{r}
+obrot <- function(a, w) {
+  macierz_obrotu <- matrix(c(cos(a), sin(a), -sin(a), cos(a)),
+                           nrow = 2)
+  w%*%macierz_obrotu
+}
+obrot(pi/2,c(0,1))
+```
