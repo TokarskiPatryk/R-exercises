@@ -1,15 +1,15 @@
 ## R-exercises
 
-[Lab5](/lab5.html)
+[Lab5 - funkcje](/lab5.html)
 
-[Lab7](/lab7.html)
+[Lab7 - ggplot](/lab7.html)
 
-[Lab9](/lab9.html)
+[Lab9 - dplyr/ggplot](/lab9.html)
 
-[Lab10](/lab10.html)
+[Lab10 - stringr/regex](/lab10.html)
 
-[Lab11](/lab11.html)
+[Lab11 - stringr/regex](/lab11.html)
 
-[Lab12](/lab12.html)
+[Lab12 - funkcje i tidyverse](/lab12.html)
 
-[Lab13](/lab13.html)
+[Lab13 - tidyverse](/lab13.html)
